@@ -28,8 +28,8 @@ Stack* __stk_ctor(const size_t count_of_stks, const int line_creating, const cha
         stks[i].funcname_creating = funcname_creating;
         stks[i].filename_creating = filename_creating;
 
-
         stks[i].FCS = calculate_control_sum(stks[i].data, stks[i].data + stks[i].capacity);
+
         stks[i].right_canary = right_canary_value;
     }
     return stks;
@@ -74,7 +74,7 @@ bool stk_increase_data_size(Stack* stk)
     }
     stk->data = buff;
     stk->capacity *= in_how_many_times_increase_and_decrease_buffer;
-    stk->FCS = calculate_control_sum(stk->data, (stk->data + (stk->capacity + 1) * sizeof(stk_elem_t)));  //capacity + 1 for finish(last element) in caltulationg FCS
+    stk->FCS = calculate_control_sum(stk->data, (stk->data + stk->capacity));
     stk_dump(stk, calculate_state_code(stk));
     return true;
 }
@@ -93,7 +93,7 @@ bool stk_decrease_data_size(Stack* stk)
     }
     stk->data = buff;
     stk->capacity *= in_how_many_times_increase_and_decrease_buffer;
-    stk->FCS = calculate_control_sum((char*)stk->data, ((char*)stk->data + (stk->capacity + 1) * sizeof(stk_elem_t)));  //capacity + 1 for finish(last element) in caltulationg FCS
+    stk->FCS = calculate_control_sum((char*)stk->data, ((char*)stk->data + stk->capacity));
 
     stk_dump(stk, calculate_state_code(stk));
     return true;
@@ -113,7 +113,7 @@ stk_elem_t push_in_stk(Stack* stk, stk_elem_t elem)
     }
     stk->data[stk->occupied_cells] = elem;
     stk->occupied_cells += 1;
-    stk->FCS = calculate_control_sum((char*)stk->data, ((char*)stk->data + (stk->capacity + 1) * sizeof(stk_elem_t)));  //capacity + 1 for finish(last element) in caltulationg FCS
+    stk->FCS = calculate_control_sum(stk->data, (stk->data + stk->capacity));
 
     stk_dump(stk, calculate_state_code(stk));
     return stk->data[stk->occupied_cells - 1];
@@ -133,7 +133,7 @@ stk_elem_t pop_from_stk(Stack* stk)
     {
         printf("Can't decrease stack, problems with memory\n");
     }
-    calculate_control_sum((char*)stk->data, ((char*)stk->data + (stk->capacity + 1) * sizeof(stk_elem_t)));  //capacity + 1 for finish(last element) in caltulationg FCS
+    calculate_control_sum(stk->data, (stk->data + stk->capacity));
 
     stk_dump(stk, calculate_state_code(stk));
     return buff;
@@ -182,7 +182,7 @@ unsigned long long calculate_state_code(const Stack* stk)
     {
         state_code |= (unsigned long long)pow(2, 1);
     }
-    if(stk->FCS != calculate_control_sum(stk->data, stk->data + (stk->capacity + 1) * (int)sizeof(stk_elem_t)))
+    if(stk->FCS != calculate_control_sum(stk->data, stk->data + stk->capacity))
     {
         state_code |= (unsigned long long)pow(2, 2);
     }
