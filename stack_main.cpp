@@ -4,16 +4,23 @@
 
 int main(){
 
-    unsigned int a = 228;
-    printf("%ld %p %p\n",calculate_control_sum(&a, &a +1), &a, &a + 1);
-
     Stack* stk = stk_ctor(1);
     push_in_stk(stk, 228);
     push_in_stk(stk, 1);
-    printf("%d\n", peek(stk));
-    printf("%d\n", pop_from_stk(stk));
-        stk->right_canary = 0;
+    //printf("%d\n", peek(stk));
+    //printf("%d\n", pop_from_stk(stk));
+    //stk->right_canary = 0;
+    //stk->capacity--;
+    push_in_stk(stk, 100);
+    for(int i = 0; i < 50; i++){
+        push_in_stk(stk, i);
+    }
 
+    for(int i = 0; i < 37; i++){
+        pop_from_stk(stk);
+    }
+    stk->left_canary = 0;
+    //stk = NULL;
     stk_dtor(stk, 1);
 
 }

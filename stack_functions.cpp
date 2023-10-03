@@ -19,10 +19,14 @@ Stack* __stk_ctor(const size_t count_of_stks, const int line_creating, const cha
         stks[i].capacity = stk_start_size;
         stks[i].occupied_cells = 0;
         stks[i].data = (stk_elem_t*)calloc(stk_start_size, sizeof(stk_elem_t));
+        for(int elem_stk = 0; elem_stk < stk_start_size; elem_stk++)
+        {
+            stks[i].data[elem_stk] = stk_poison;
+        }
         if(stks[i].data == NULL){
             printf("Can't construct, no free memory\n");
             stks[i].capacity = 0;
-        }
+        } // TODO: MOVE
 
         stks[i].line_creating = line_creating;
         stks[i].funcname_creating = funcname_creating;
@@ -52,8 +56,6 @@ void stk_dtor(Stack* stks, const size_t count_of_stks)
     free(stks);
 }
 
-
-
 stk_elem_t peek(const Stack* stk)
 {
     assert(stk != NULL);
@@ -63,37 +65,40 @@ stk_elem_t peek(const Stack* stk)
 
 bool stk_increase_data_size(Stack* stk)
 {
+    assert(stk != NULL);
     stk_dump(stk, calculate_state_code(stk));
 
     stk_elem_t* buff = NULL;
-    assert(stk != NULL);
-    buff = (stk_elem_t*)realloc(stk->data, stk->capacity * sizeof(stk_elem_t) * in_how_many_times_increase_and_decrease_buffer);
+    buff = (stk_elem_t*)realloc(stk->data, stk->capacity * sizeof(stk_elem_t) * in_how_many_times_increase_and_decrease_buffer); //TODO: SIZE_MULTIPLIER
     if(buff == NULL){
         printf("Can't increase size, no free memory\n");
         return false;
     }
     stk->data = buff;
     stk->capacity *= in_how_many_times_increase_and_decrease_buffer;
+    for(size_t i = stk->occupied_cells; i < stk->capacity; i++)
+    {
+        stk->data[i] = stk_poison;
+    }
     stk->FCS = calculate_control_sum(stk->data, (stk->data + stk->capacity));
     stk_dump(stk, calculate_state_code(stk));
     return true;
 }
 
-
 bool stk_decrease_data_size(Stack* stk)
 {
+    assert(stk != NULL);
     stk_dump(stk, calculate_state_code(stk));
 
     stk_elem_t* buff = NULL;
-    assert(stk != NULL);
-    buff = (stk_elem_t*)realloc(stk->data, stk->capacity * sizeof(stk_elem_t) / in_how_many_times_increase_and_decrease_buffer);
+    buff = (stk_elem_t*)realloc(stk->data, stk->capacity * sizeof(stk_elem_t) /in_how_many_times_increase_and_decrease_buffer);
     if(buff == NULL){
-        printf("Can't decrease size, problems with memory\n");
+        printf("Can't decrease capacity of stk, problems with memory\n");
         return false;
     }
     stk->data = buff;
-    stk->capacity *= in_how_many_times_increase_and_decrease_buffer;
-    stk->FCS = calculate_control_sum((char*)stk->data, ((char*)stk->data + stk->capacity));
+    stk->capacity /= in_how_many_times_increase_and_decrease_buffer;
+    stk->FCS = calculate_control_sum(stk->data, (stk->data + stk->capacity));
 
     stk_dump(stk, calculate_state_code(stk));
     return true;
@@ -125,15 +130,19 @@ stk_elem_t pop_from_stk(Stack* stk)
     stk_dump(stk, calculate_state_code(stk));
 
     stk_elem_t buff = stk->data[stk->occupied_cells - 1];
-
+                                                                                    // TODO: MULTIPLY BY 2
+    if((stk->occupied_cells <= stk->capacity / (size_t)pow(in_how_many_times_increase_and_decrease_buffer, 2)) && (stk->capacity > stk_start_size))
+    {
+        if(!stk_decrease_data_size(stk))
+        {
+            printf("Can't decrease stack, problems with memory\n");
+            stk->data[stk->occupied_cells - 1] = stk_poison;
+            return stk_poison;
+        }
+    }
     stk->data[stk->occupied_cells - 1] = stk_poison;
     stk->occupied_cells -= 1;
-
-    if(!stk_decrease_data_size(stk))
-    {
-        printf("Can't decrease stack, problems with memory\n");
-    }
-    calculate_control_sum(stk->data, (stk->data + stk->capacity));
+    stk->FCS = calculate_control_sum(stk->data, (stk->data + stk->capacity));
 
     stk_dump(stk, calculate_state_code(stk));
     return buff;
@@ -151,22 +160,22 @@ unsigned long long calculate_control_sum(const void* start, const void* finish)
     {
         for(int bit = 0; bit < bits_in_byte; bit++)
         {
+                                            // TODO: 1<<BIT
             if(((int)*(elem + index) & (int)pow(2, bit)) == 0){
                 hash_data += 1;
-            }
+            } // TODO: HASH POLUCHSHE
         }
         index++;
     }
     return hash_data;
 }
 
-
 /**
 1 - left_canary
-2 - left_canay
+2 - left_canary
 4 - FCS
-8 - occupied_cells   //same as capacity, left for scalability
-16 - capacity         //same as occupied_cells, left for scalability
+8 - occupied_cells
+16 - capacity
 32 - data
 */
 unsigned long long calculate_state_code(const Stack* stk)
@@ -190,7 +199,7 @@ unsigned long long calculate_state_code(const Stack* stk)
     {
         state_code |= (unsigned long long)pow(2, 3);
     }
-    if(stk->capacity < stk->occupied_cells)
+    if(stk->capacity < stk->occupied_cells || stk->capacity < stk_start_size)
     {
         state_code |= (unsigned long long)pow(2, 4);
     }
@@ -201,7 +210,7 @@ unsigned long long calculate_state_code(const Stack* stk)
     return state_code;
 }
 
-bool __stk_dump(const Stack* stk, unsigned long long state_code, const int line, const char* funcname, const char* filename)
+bool __stk_dump(const Stack* stk, unsigned long long state_code, const int line, const char* funcname, const char* filename)            //exit()
 {
     assert(stk != NULL);
 
@@ -225,5 +234,3 @@ bool __stk_dump(const Stack* stk, unsigned long long state_code, const int line,
     }
     exit(1);
 }
-
-

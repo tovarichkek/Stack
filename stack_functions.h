@@ -9,7 +9,7 @@ typedef int stk_elem_t;
 //Constants
 const int stk_start_size = 8;
 
-const stk_elem_t stk_poison = -9999999;
+const stk_elem_t stk_poison = -9999999; // TODO: USE HEXSPEAK
 
 const int in_how_many_times_increase_and_decrease_buffer = 2;
 
@@ -50,22 +50,6 @@ stk_elem_t peek(const Stack* stk); // only return last elem
 unsigned long long calculate_state_code(const Stack* stk);
 bool __stk_dump(const Stack* stk, unsigned long long state_code, const int line, const char* funcname, const char* filename);  //return true if stack valid, exit(1) if no
 
-
 unsigned long long calculate_control_sum(const void* start, const void* finish);
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 #endif // STACK_FUNCTIONS
