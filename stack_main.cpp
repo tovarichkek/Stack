@@ -18,7 +18,7 @@ int main(){
     for(int i = 0; i < 37; i++){
         pop_from_stk(stk);
     }
-
+    stk = NULL;
     #ifdef STACK_PROTECTION
         //stk->left_canary = 0;
     #endif // STACK_PROTECTION

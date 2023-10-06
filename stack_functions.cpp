@@ -180,7 +180,7 @@ unsigned long long calculate_control_sum(const void* start, const void* finish)
     {
         for(int bit = 0; bit < bits_in_byte; bit++)
         {
-            hash_data += (unsigned long long)((index + bit) * (*(elem + index) & (1 << bit))) + (elem + index) * bit;
+            hash_data += (unsigned long long)((index + bit) * (*(elem + index) & (1 << bit))) + (unsigned long long)(elem + index) * bit;
         }
         index++;
     }
@@ -193,7 +193,7 @@ unsigned long long calculate_control_sum(const void* start, const void* finish)
 2 - 4 - FCS
 3 - 8 - occupied_cells
 4 - 16 - capacity
-5 - 32 - data
+5 - 32 - data not NULL
 */
 unsigned long long calculate_state_code(const Stack* stk)
 {
