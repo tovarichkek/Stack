@@ -1,6 +1,7 @@
 #ifndef STACK_FUNCTIONS
 #define STACK_FUNCTIONS
 
+
 #define stk_dump(stk, state_code) __stk_dump((stk), (state_code), __LINE__, __FUNCTION__, __FILE__)
 #define stk_ctor(count) __stk_ctor((count), __LINE__, __FUNCTION__, __FILE__)
 
@@ -15,15 +16,19 @@ const int size_multiplier = 2;
 
 const int bits_in_byte = 8;
 
-const int size_canary = sizeof(long long);
-const long long left_canary_value = 0xEDEEDEEDE;
-const long long right_canary_value = 0xDEDDEDDED;
-const long long bad_canary_value = 0xAAAAAAAAA;
+#ifdef STACK_PROTECTION
+    const int size_canary = sizeof(long long);
+    const long long left_canary_value = 0xEDEEDEEDE;
+    const long long right_canary_value = 0xDEDDEDDED;
+    const long long bad_canary_value = 0xAAAAAAAAA;
+#endif // STACK_PROTECTION
 
 //Struct
 struct Stack
 {
-    unsigned long long left_canary;
+    #ifdef STACK_PROTECTION
+        unsigned long long left_canary;
+    #endif // STACK_PROTECTION
 
     size_t capacity;
     size_t occupied_cells;
@@ -33,9 +38,10 @@ struct Stack
     const char* funcname_creating;
     const char* filename_creating;
 
-    unsigned long long FCS;
-
-    unsigned long long right_canary;
+    #ifdef STACK_PROTECTION
+        unsigned long long FCS;
+        unsigned long long right_canary;
+    #endif // STACK_PROTECTION
 };
 
 //Prototypes
@@ -47,9 +53,10 @@ stk_elem_t push_in_stk(Stack* stk, stk_elem_t elem);
 stk_elem_t pop_from_stk(Stack* stk);
 stk_elem_t peek(const Stack* stk); // only return last elem
 
-unsigned long long calculate_state_code(const Stack* stk);
-bool __stk_dump(const Stack* stk, unsigned long long state_code, const int line, const char* funcname, const char* filename);  //return true if stack valid, false if no
-
-unsigned long long calculate_control_sum(const void* start, const void* finish);
+#ifdef STACK_PROTECTION
+    unsigned long long calculate_state_code(const Stack* stk);
+    bool __stk_dump(const Stack* stk, unsigned long long state_code, const int line, const char* funcname, const char* filename);  //return true if stack valid, false if no
+    unsigned long long calculate_control_sum(const void* start, const void* finish);
+#endif // STACK_PROTECTION
 
 #endif // STACK_FUNCTIONS

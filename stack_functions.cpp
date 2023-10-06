@@ -15,7 +15,10 @@ Stack* __stk_ctor(const size_t count_of_stks, const int line_creating, const cha
     }
     for(size_t i = 0; i < count_of_stks; i++)
     {
-        stks[i].left_canary = left_canary_value;
+        #ifdef STACK_PROTECTION
+            stks[i].left_canary = left_canary_value;
+        #endif // STACK_PROTECTION
+
         stks[i].capacity = stk_start_size;
         stks[i].occupied_cells = 0;
         stks[i].data = (stk_elem_t*)calloc(stk_start_size, sizeof(stk_elem_t));
@@ -32,9 +35,10 @@ Stack* __stk_ctor(const size_t count_of_stks, const int line_creating, const cha
         stks[i].funcname_creating = funcname_creating;
         stks[i].filename_creating = filename_creating;
 
-        stks[i].FCS = calculate_control_sum(stks[i].data, stks[i].data + stks[i].capacity);
-
-        stks[i].right_canary = right_canary_value;
+        #ifdef STACK_PROTECTION
+            stks[i].FCS = calculate_control_sum(stks[i].data, stks[i].data + stks[i].capacity);
+            stks[i].right_canary = right_canary_value;
+        #endif // STACK_PROTECTION
     }
     return stks;
 }
@@ -44,14 +48,19 @@ void stk_dtor(Stack* stks, const size_t count_of_stks)
     assert(stks != NULL);
     for(size_t i = 0; i < count_of_stks; i++)
     {
-        stk_dump(&(stks[i]), calculate_state_code(&(stks[i])));
+        #ifdef STACK_PROTECTION
+            stk_dump(&(stks[i]), calculate_state_code(&(stks[i])));
+            stks[i].left_canary = bad_canary_value;
+        #endif // STACK_PROTECTION
 
-        stks[i].left_canary = bad_canary_value;
         stks[i].capacity = 0;
         stks[i].occupied_cells = stk_poison;
         free(stks[i].data);
-        stks[i].FCS = 0;
-        stks[i].right_canary = bad_canary_value;
+
+        #ifdef STACK_PROTECTION
+            stks[i].FCS = 0;
+            stks[i].right_canary = bad_canary_value;
+        #endif // STACK_PROTECTION
     }
     free(stks);
 }
@@ -59,15 +68,18 @@ void stk_dtor(Stack* stks, const size_t count_of_stks)
 stk_elem_t peek(const Stack* stk)
 {
     assert(stk != NULL);
-    stk_dump(stk, calculate_state_code(stk));
+    #ifdef STACK_PROTECTION
+        stk_dump(stk, calculate_state_code(stk));
+    #endif // STACK_PROTECTION
     return stk->data[stk->occupied_cells - 1];
 }
 
 bool stk_increase_data_size(Stack* stk)
 {
     assert(stk != NULL);
-    stk_dump(stk, calculate_state_code(stk));
-
+    #ifdef STACK_PROTECTION
+        stk_dump(stk, calculate_state_code(stk));
+    #endif // STACK_PROTECTION
     stk_elem_t* buff = NULL;
     buff = (stk_elem_t*)realloc(stk->data, stk->capacity * sizeof(stk_elem_t) * size_multiplier);
     if(buff == NULL){
@@ -80,15 +92,19 @@ bool stk_increase_data_size(Stack* stk)
     {
         stk->data[i] = stk_poison;
     }
-    stk->FCS = calculate_control_sum(stk->data, (stk->data + stk->capacity));
-    stk_dump(stk, calculate_state_code(stk));
+    #ifdef STACK_PROTECTION
+        stk->FCS = calculate_control_sum(stk->data, (stk->data + stk->capacity));
+        stk_dump(stk, calculate_state_code(stk));
+    #endif // STACK_PROTECTION
     return true;
 }
 
 bool stk_decrease_data_size(Stack* stk)
 {
     assert(stk != NULL);
-    stk_dump(stk, calculate_state_code(stk));
+    #ifdef STACK_PROTECTION
+        stk_dump(stk, calculate_state_code(stk));
+    #endif // STACK_PROTECTION
 
     stk_elem_t* buff = NULL;
     buff = (stk_elem_t*)realloc(stk->data, stk->capacity * sizeof(stk_elem_t) /size_multiplier);
@@ -98,16 +114,20 @@ bool stk_decrease_data_size(Stack* stk)
     }
     stk->data = buff;
     stk->capacity /= size_multiplier;
-    stk->FCS = calculate_control_sum(stk->data, (stk->data + stk->capacity));
 
-    stk_dump(stk, calculate_state_code(stk));
+    #ifdef STACK_PROTECTION
+        stk->FCS = calculate_control_sum(stk->data, (stk->data + stk->capacity));
+        stk_dump(stk, calculate_state_code(stk));
+    #endif // STACK_PROTECTION
     return true;
 }
 
 stk_elem_t push_in_stk(Stack* stk, stk_elem_t elem)
 {
     assert(stk != NULL);
-    stk_dump(stk, calculate_state_code(stk));
+    #ifdef STACK_PROTECTION
+        stk_dump(stk, calculate_state_code(stk));
+    #endif // STACK_PROTECTION
 
     if(stk->capacity == stk->occupied_cells)
     {
@@ -118,16 +138,19 @@ stk_elem_t push_in_stk(Stack* stk, stk_elem_t elem)
     }
     stk->data[stk->occupied_cells] = elem;
     stk->occupied_cells += 1;
-    stk->FCS = calculate_control_sum(stk->data, (stk->data + stk->capacity));
-
-    stk_dump(stk, calculate_state_code(stk));
+    #ifdef STACK_PROTECTION
+        stk->FCS = calculate_control_sum(stk->data, (stk->data + stk->capacity));
+        stk_dump(stk, calculate_state_code(stk));
+    #endif // STACK_PROTECTION
     return stk->data[stk->occupied_cells - 1];
 }
 
 stk_elem_t pop_from_stk(Stack* stk)
 {
     assert(stk != NULL);
-    stk_dump(stk, calculate_state_code(stk));
+    #ifdef STACK_PROTECTION
+        stk_dump(stk, calculate_state_code(stk));
+    #endif // STACK_PROTECTION
 
     stk_elem_t buff = stk->data[stk->occupied_cells - 1];
 
@@ -142,13 +165,15 @@ stk_elem_t pop_from_stk(Stack* stk)
     }
     stk->data[stk->occupied_cells - 1] = stk_poison;
     stk->occupied_cells -= 1;
-    stk->FCS = calculate_control_sum(stk->data, (stk->data + stk->capacity));
 
-    stk_dump(stk, calculate_state_code(stk));
+    #ifdef STACK_PROTECTION
+        stk->FCS = calculate_control_sum(stk->data, (stk->data + stk->capacity));
+        stk_dump(stk, calculate_state_code(stk));
+    #endif // STACK_PROTECTION
     return buff;
 }
 
-
+#ifdef STACK_PROTECTION
 /**
  * take each byte from start to end
  * and mult each bit(1) on 2^(number in byte)
@@ -177,12 +202,12 @@ unsigned long long calculate_control_sum(const void* start, const void* finish)
 }
 
 /**
-1 - left_canary
-2 - left_canary
-4 - FCS
-8 - occupied_cells
-16 - capacity
-32 - data
+0 - 1 - left_canary
+1 - 2 - left_canary
+2 - 4 - FCS
+3 - 8 - occupied_cells
+4 - 16 - capacity
+5 - 32 - data
 */
 unsigned long long calculate_state_code(const Stack* stk)
 {
@@ -223,20 +248,21 @@ bool __stk_dump(const Stack* stk, unsigned long long state_code, const int line,
     if(state_code == 0){
         return true;
     }
-    printf("Bad stack [%p], created in file: %s, function: %s, line: %d\n\n", stk, stk->filename_creating, stk->funcname_creating, stk->line_creating);
+    fprintf(stderr, "Bad stack [%p], created in file: %s, function: %s, line: %d\n\n", stk, stk->filename_creating, stk->funcname_creating, stk->line_creating);
 
-    printf("dump called from file: %s, function: %s, line: %d\n", filename, funcname, line);
-    printf("state_code: %llu\n", state_code);
-    printf("occupied_cells: %lu\n", stk->occupied_cells);
-    printf("capacity: %lu\n", stk->capacity);
-    printf("data: [%p]\n", stk->data);
-    printf("FCS: %llu\n", stk->FCS);
+    fprintf(stderr, "dump called from file: %s, function: %s, line: %d\n", filename, funcname, line);
+    fprintf(stderr, "state_code: %llu\n", state_code);
+    fprintf(stderr, "occupied_cells: %lu\n", stk->occupied_cells);
+    fprintf(stderr, "capacity: %lu\n", stk->capacity);
+    fprintf(stderr, "data: [%p]\n", stk->data);
+    fprintf(stderr, "FCS: %llu\n", stk->FCS);
     for(size_t i = 0; i < stk->capacity; i++){
         if(stk->data[i] != stk_poison)
         {
-            printf("* ");
+            fprintf(stderr, "* ");
         }
-        printf("[%lu] = %d\n", i, stk->data[i]);
+        fprintf(stderr, "[%lu] = %d\n", i, stk->data[i]);
     }
     return false;
 }
+#endif // STACK_PROTECTION
