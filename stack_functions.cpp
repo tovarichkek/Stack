@@ -4,65 +4,53 @@
 #include <assert.h>
 #include "stack_functions.h"
 
-Stack* __stk_ctor(const size_t count_of_stks, const int line_creating, const char* funcname_creating, const char* filename_creating)
+void __stk_ctor(Stack* stk, const int line_creating, const char* funcname_creating, const char* filename_creating)
 {
+	assert(stk != NULL);
+    #ifdef STACK_PROTECTION
+        stk->left_canary = left_canary_value;
+    #endif // STACK_PROTECTION
 
-    Stack* stks = (Stack*)calloc(count_of_stks, sizeof(Stack));
-    if(stks == NULL)
-    {
-        printf("No free memory\n");
-        return NULL;
+    stk->capacity = stk_start_size;
+    stk->occupied_cells = 0;
+    stk->data = (stk_elem_t*)calloc(stk_start_size, sizeof(stk_elem_t));
+    if(stk->data == NULL){
+        printf("Can't construct, no free memory\n");
+        stk->capacity = 0;
     }
-    for(size_t i = 0; i < count_of_stks; i++)
+    for(int elem_stk = 0; elem_stk < stk_start_size; elem_stk++)
     {
-        #ifdef STACK_PROTECTION
-            stks[i].left_canary = left_canary_value;
-        #endif // STACK_PROTECTION
-
-        stks[i].capacity = stk_start_size;
-        stks[i].occupied_cells = 0;
-        stks[i].data = (stk_elem_t*)calloc(stk_start_size, sizeof(stk_elem_t));
-        if(stks[i].data == NULL){
-            printf("Can't construct, no free memory\n");
-            stks[i].capacity = 0;
-        }
-        for(int elem_stk = 0; elem_stk < stk_start_size; elem_stk++)
-        {
-            stks[i].data[elem_stk] = stk_poison;
-        }
-
-        stks[i].line_creating = line_creating;
-        stks[i].funcname_creating = funcname_creating;
-        stks[i].filename_creating = filename_creating;
-
-        #ifdef STACK_PROTECTION
-            stks[i].FCS = calculate_control_sum(stks[i].data, stks[i].data + stks[i].capacity);
-            stks[i].right_canary = right_canary_value;
-        #endif // STACK_PROTECTION
+        stk->data[elem_stk] = stk_poison;
     }
-    return stks;
+
+    stk->line_creating = line_creating;
+    stk->funcname_creating = funcname_creating;
+    stk->filename_creating = filename_creating;
+
+    #ifdef STACK_PROTECTION
+        stk->FCS = calculate_control_sum(stk->data, stk->data + stk->capacity);
+        stk->right_canary = right_canary_value;
+    #endif // STACK_PROTECTION
+    return;
 }
 
-void stk_dtor(Stack* stks, const size_t count_of_stks)
+void stk_dtor(Stack* stk)
 {
-    assert(stks != NULL);
-    for(size_t i = 0; i < count_of_stks; i++)
-    {
-        #ifdef STACK_PROTECTION
-            stk_dump(&(stks[i]), calculate_state_code(&(stks[i])));
-            stks[i].left_canary = bad_canary_value;
-        #endif // STACK_PROTECTION
+    assert(stk != NULL);
+    #ifdef STACK_PROTECTION
+        stk_dump(stk, calculate_state_code(stk));
+        stk->left_canary = bad_canary_value;
+    #endif // STACK_PROTECTION
 
-        stks[i].capacity = 0;
-        stks[i].occupied_cells = stk_poison;
-        free(stks[i].data);
+    stk->capacity = 0;
+    stk->occupied_cells = stk_poison;
+    free(stk->data);
 
-        #ifdef STACK_PROTECTION
-            stks[i].FCS = 0;
-            stks[i].right_canary = bad_canary_value;
-        #endif // STACK_PROTECTION
-    }
-    free(stks);
+    #ifdef STACK_PROTECTION
+        stk->FCS = 0;
+        stk->right_canary = bad_canary_value;
+    #endif // STACK_PROTECTION
+	free(stk);
 }
 
 stk_elem_t peek(const Stack* stk)

@@ -1,10 +1,12 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include "stack_functions.h"
-
 
 int main(){
 
-    Stack* stk = stk_ctor(1);
+    Stack* stk = (Stack*)calloc(1, sizeof(Stack));
+
+	stk_ctor(stk);
     push_in_stk(stk, 228);
     push_in_stk(stk, 1);
 
@@ -16,10 +18,11 @@ int main(){
     for(int i = 0; i < 37; i++){
         pop_from_stk(stk);
     }
+
     #ifdef STACK_PROTECTION
-        stk->left_canary = 0;
+        //stk->left_canary = 0;
     #endif // STACK_PROTECTION
     //stk = NULL;
-    stk_dtor(stk, 1);
+    stk_dtor(stk);
 
 }

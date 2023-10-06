@@ -45,8 +45,8 @@ struct Stack
 };
 
 //Prototypes
-Stack* __stk_ctor(const size_t count_of_stks, const int line, const char* funcname_creating, const char* filename_creating);
-void stk_dtor(Stack* stks, const size_t count_of_stks);
+void __stk_ctor(Stack* stk, const int line_creating, const char* funcname_creating, const char* filename_creating);
+void stk_dtor(Stack* stk);
 bool stk_increase_data_size(Stack* stk);
 bool stk_decrease_data_size(Stack* stk);
 stk_elem_t push_in_stk(Stack* stk, stk_elem_t elem);
