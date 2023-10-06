@@ -164,7 +164,9 @@ stk_elem_t pop_from_stk(Stack* stk)
 #ifdef STACK_PROTECTION
 /**
  * take each byte from start to end
- * and mult each bit(1) on 2^(number in byte)
+ * mult each bit(1) on 2^(number in byte)
+ * and sum with (number of byte * numver of bit)
+ * for dependence from count of bytes
  */
 unsigned long long calculate_control_sum(const void* start, const void* finish)
 {
@@ -178,11 +180,7 @@ unsigned long long calculate_control_sum(const void* start, const void* finish)
     {
         for(int bit = 0; bit < bits_in_byte; bit++)
         {
-            hash_data += (unsigned long long)((index + bit) * (*(elem + index) & (1 << bit)));
-
-            if(((int)*(elem + index) & (int)pow(2, bit)) == 0){
-                hash_data += 1;
-            }
+            hash_data += (unsigned long long)((index + bit) * (*(elem + index) & (1 << bit))) + (elem + index) * bit;
         }
         index++;
     }

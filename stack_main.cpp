@@ -8,7 +8,7 @@ int main(){
 
 	stk_ctor(stk);
     push_in_stk(stk, 228);
-    push_in_stk(stk, 1);
+    push_in_stk(stk, 666);
 
     push_in_stk(stk, 100);
     for(int i = 0; i < 49; i++){
